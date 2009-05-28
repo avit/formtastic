@@ -975,7 +975,7 @@ module Formtastic #:nodoc:
 
       template.content_tag(:fieldset,
         %{<legend>#{self.label(method, options.slice(:label, :required).merge!(:as_span => true))}</legend>} +
-        template.content_tag(:ol, contents)
+        template.content_tag(:div, contents)
       )
     end
 
