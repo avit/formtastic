@@ -99,7 +99,7 @@ module Formtastic #:nodoc:
         send(:"inline_#{type}_for", method, options)
       end.compact.join("\n")
 
-      return template.content_tag(:li, list_item_content, wrapper_html)
+      return template.content_tag(:div, list_item_content, wrapper_html)
     end
 
     # Creates an input fieldset and ol tag wrapping for use around a set of inputs.  It can be
@@ -283,12 +283,12 @@ module Formtastic #:nodoc:
     #
     #  <%= form.commit_button "Go" %> => <input name="commit" type="submit" value="Go" />
     #  <%= form.commit_button :class => "pretty" %> => <input name="commit" type="submit" value="Save Post" class="pretty" />
-    
+
     def commit_button(*args)
       value = args.first.is_a?(String) ? args.shift : save_or_create_button_text
       options = args.shift || {}
       button_html = options.delete(:button_html) || {}
-      template.content_tag(:li, self.submit(value, button_html), :class => "commit")
+      template.content_tag(:span, self.submit(value, button_html), :class => "commit")
     end
 
     # A thin wrapper around #fields_for to set :builder => Formtastic::SemanticFormBuilder
@@ -650,7 +650,7 @@ module Formtastic #:nodoc:
         )
 
         li_options = value_as_class ? { :class => value.to_s.downcase } : {}
-        template.content_tag(:li, li_content, li_options)
+        template.content_tag(:div, li_content, li_options)
       end
 
       field_set_and_list_wrapping_for_method(method, options, list_item_content)
@@ -739,14 +739,14 @@ module Formtastic #:nodoc:
         field_name = "#{method}(#{position[input]}i)"
         if options["discard_#{input}".intern]
           break if time_inputs.include?(input)
-          
+
           hidden_value = datetime.respond_to?(input) ? datetime.send(input) : datetime
           hidden_fields_capture << template.hidden_field_tag("#{@object_name}[#{field_name}]", (hidden_value || 1), :id => html_id)
         else
           opts = set_options(options).merge(:prefix => @object_name, :field_name => field_name)
           item_label_text = I18n.t(input.to_s, :default => input.to_s.humanize, :scope => [:datetime, :prompts])
 
-          list_items_capture << template.content_tag(:li,
+          list_items_capture << template.content_tag(:div,
             template.content_tag(:label, item_label_text, :for => html_id) +
             template.send("select_#{input}".intern, datetime, opts, html_options.merge(:id => html_id))
           )
@@ -827,7 +827,7 @@ module Formtastic #:nodoc:
         value = c.is_a?(Array) ? c.last : c
 
         html_options.merge!(:id => generate_html_id(input_name, value.to_s.downcase))
- 
+
         li_content = template.content_tag(:label,
           "#{self.check_box(input_name, html_options, value, unchecked_value)} #{label}",
           :for => html_options[:id]
@@ -839,16 +839,16 @@ module Formtastic #:nodoc:
 
       field_set_and_list_wrapping_for_method(method, options, list_item_content)
     end
-    
-    
-    # Outputs a country select input, wrapping around a regular country_select helper. 
+
+
+    # Outputs a country select input, wrapping around a regular country_select helper.
     # Rails doesn't come with a country_select helper by default any more, so you'll need to install
     # the "official" plugin, or, if you wish, any other country_select plugin that behaves in the
     # same way.
     #
     # The Rails plugin iso-3166-country-select plugin can be found "here":http://github.com/rails/iso-3166-country-select.
     #
-    # By default, Formtastic includes a handfull of english-speaking countries as "priority counties", 
+    # By default, Formtastic includes a handfull of english-speaking countries as "priority counties",
     # which you can change to suit your market and user base (see README for more info on config).
     #
     # Examples:
@@ -857,14 +857,14 @@ module Formtastic #:nodoc:
     #
     def country_input(method, options)
       raise "To use the :country input, please install a country_select plugin, like this one: http://github.com/rails/iso-3166-country-select" unless self.respond_to?(:country_select)
-      
+
       html_options = options.delete(:input_html) || {}
       priority_countries = options.delete(:priority_countries) || @@priority_countries
 
       self.label(method, options.slice(:label, :required)) +
       self.country_select(method, priority_countries, set_options(options), html_options)
     end
-    
+
 
     # Outputs a label containing a checkbox and the label text. The label defaults
     # to the column name (method name) and can be altered with the :label option.
@@ -959,7 +959,7 @@ module Formtastic #:nodoc:
       # Ruby 1.9: String#to_s behavior changed, need to make an explicit join.
       contents = contents.join if contents.respond_to?(:join)
       fieldset = template.content_tag(:fieldset,
-        legend + template.content_tag(:ol, contents),
+        legend + contents,
         html_options.except(:builder, :parent)
       )
 
