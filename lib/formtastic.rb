@@ -241,7 +241,7 @@ module Formtastic #:nodoc:
         if @object && args.empty?
           args  = @object.class.reflections.map { |n,_| n if _.macro == :belongs_to }
           args += @object.class.content_columns.map(&:name)
-          args -= %w[created_at updated_at created_on updated_on]
+          args -= %w[created_at updated_at created_on updated_on lock_version]
           args.compact!
         end
         contents = args.map { |method| input(method.to_sym) }
@@ -554,10 +554,14 @@ module Formtastic #:nodoc:
     #
     # By default, all select inputs will have a blank option at the top of the list. You can add
     # a prompt with the :prompt option, or disable the blank option with :include_blank => false.
+    #
     def select_input(method, options)
       collection = find_collection_for_column(method, options)
       html_options = options.delete(:input_html) || {}
-      options[:include_blank] ||= true
+
+      unless options.key?(:include_blank) || options.key?(:prompt)
+        options[:include_blank] = true
+      end
 
       reflection = find_reflection(method)
       if reflection && [ :has_many, :has_and_belongs_to_many ].include?(reflection.macro)
@@ -1081,10 +1085,14 @@ module Formtastic #:nodoc:
     #
     def generate_association_input_name(method)
       if reflection = find_reflection(method)
-        method = "#{method.to_s.singularize}_id"
-        method = method.pluralize if [:has_and_belongs_to_many, :has_many].include?(reflection.macro)
+        if [:has_and_belongs_to_many, :has_many].include?(reflection.macro)
+          "#{method.to_s.singularize}_ids"
+        else
+          "#{method}_id"
+        end
+      else
+        method
       end
-      method
     end
 
     # If an association method is passed in (f.input :author) try to find the
